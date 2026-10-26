@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Health Hub — PCOS AI Clinical Decision Support{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <div class="hero-pill">
+            <i data-lucide="shield-check" style="width:14px; height:14px;"></i>
+            Verified Model Pipeline Active
+        </div>
+        <h1 class="hero-title">
+            Empowering Early PCOS Assessment with <span>Explainable AI</span>
+        </h1>
+        <p class="hero-desc">
+            An academic clinical decision-support platform integrating dual transfer-learning architectures
+            (EfficientNetB0 & DenseNet121), soft-voting ensemble prediction, genuine Grad-CAM visual attribution,
+            and interactive clinical parameter exploration.
+        </p>
+        <div class="hero-actions">
+            <a href="{{ url_for('ai_check') }}" class="btn btn-primary">
+                <i data-lucide="upload-cloud"></i> Upload Ultrasound Scan
+            </a>
+            <a href="{{ url_for('what_if') }}" class="btn btn-secondary">
+                <i data-lucide="sliders"></i> Try What-If Lab
+            </a>
+            <a href="{{ url_for('model_lab') }}" class="btn btn-outline-purple">
+                <i data-lucide="bar-chart-2"></i> View Benchmarks
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- System Status Grid -->
+<div class="status-grid">
+    <div class="status-card">
+        <div class="status-icon purple">
+            <i data-lucide="cpu"></i>
+        </div>
+        <div class="status-info">
+            <h4>EfficientNetB0</h4>
+            <p>{{ status.efficientnet.name or "EfficientNetB0_best.keras" }}</p>
+            {% if status.efficientnet.loaded %}
+                <span class="status-pill ready">Ready ({{ "{:,}".format(status.efficientnet.params) }} params)</span>
+            {% else %}
+                <span class="status-pill notice">Not Loaded</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="status-icon blue">
+            <i data-lucide="network"></i>
+        </div>
+        <div class="status-info">
+            <h4>DenseNet121</h4>
+            <p>{{ status.densenet.name or "DenseNet121_best.keras" }}</p>
+            {% if status.densenet.loaded %}
+                <span class="status-pill ready">Ready ({{ "{:,}".format(status.densenet.params) }} params)</span>
+            {% else %}
+                <span class="status-pill notice">Not Loaded</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="status-icon green">
+            <i data-lucide="layers"></i>
+        </div>
+        <div class="status-info">
+            <h4>Soft-Voting Ensemble</h4>
+            <p>w1(Eff) = {{ status.ensemble.weights.w_eff if status.ensemble.weights else 0.50 }} | w2(Dense) = {{ status.ensemble.weights.w_dense if status.ensemble.weights else 0.50 }}</p>
+            <span class="status-pill ready">Threshold: {{ status.ensemble.threshold }}</span>
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="status-icon amber">
+            <i data-lucide="table"></i>
+        </div>
+        <div class="status-info">
+            <h4>Tabular Clinical Model</h4>
+            <p>{{ status.tabular.name }}</p>
+            {% if status.tabular.loaded %}
+                <span class="status-pill ready">Ready ({{ status.tabular.features_count }} features)</span>
+            {% else %}
+                <span class="status-pill notice">Not Loaded</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Test Sample Scans Section -->
+<div class="card" style="margin-bottom: 2.5rem;">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i data-lucide="image"></i> Quick Test Ultrasound Library</h3>
+            <p class="card-subtitle">Click any sample scan below to run immediate model prediction and view Grad-CAM attribution without uploading.</p>
+        </div>
+        <a href="{{ url_for('ai_check') }}" class="btn btn-outline-purple" style="font-size:0.82rem; padding:0.4rem 0.9rem;">
+            Custom Upload
+        </a>
+    </div>
+
+    <form id="upload-form" action="{{ url_for('ai_check') }}" method="POST">
+        <input type="hidden" name="sample_path" id="sample_path_input" value="">
+        <div class="sample-grid">
+            {% for s in samples %}
+            <div class="sample-item sample-card-btn" data-sample-path="{{ s.path }}">
+                <img src="{{ s.path }}" alt="{{ s.name }}">
+                <span>{{ s.name }}</span>
+                <span style="font-size:0.75rem; color:{% if s.type == 'PCOS' %}#DC2626{% else %}#059669{% endif %}; font-weight:700;">
+                    Ground Truth: {{ s.type }}
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </form>
+</div>
+
+<!-- Feature Navigation Showcase -->
+<div class="grid-3">
+    <div class="card">
+        <div class="status-icon purple" style="margin-bottom:1rem;">
+            <i data-lucide="eye"></i>
+        </div>
+        <h3 class="card-title" style="font-size:1.1rem;">AI Vision (Grad-CAM)</h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+            Inspect genuine Gradient-weighted Class Activation Maps overlaid directly on ultrasound scans to see which follicular regions guided the models.
+        </p>
+        <a href="{{ url_for('ai_vision') }}" class="btn btn-secondary" style="font-size:0.82rem; width:100%;">
+            Explore Explainability <i data-lucide="arrow-right" style="width:14px; height:14px;"></i>
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="status-icon blue" style="margin-bottom:1rem;">
+            <i data-lucide="sliders"></i>
+        </div>
+        <h3 class="card-title" style="font-size:1.1rem;">What-If Clinical Lab</h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+            Simulate how modifying clinical markers (BMI, cycle regularity, AMH, follicle counts) shifts the AI-predicted likelihood using the verified Random Forest model.
+        </p>
+        <a href="{{ url_for('what_if') }}" class="btn btn-secondary" style="font-size:0.82rem; width:100%;">
+            Launch Simulation <i data-lucide="arrow-right" style="width:14px; height:14px;"></i>
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="status-icon green" style="margin-bottom:1rem;">
+            <i data-lucide="compass"></i>
+        </div>
+        <h3 class="card-title" style="font-size:1.1rem;">Care Compass & Wellness</h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;">
+            Evidence-based educational guidance, diagnostic laboratory panels, lifestyle pillars, and preparation checklists for doctor appointments.
+        </p>
+        <a href="{{ url_for('care_compass') }}" class="btn btn-secondary" style="font-size:0.82rem; width:100%;">
+            View Clinical Guidance <i data-lucide="arrow-right" style="width:14px; height:14px;"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

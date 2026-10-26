@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}What-If Clinical Lab — PCOS AI{% endblock %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom: 1.5rem;">
+    <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text-navy);">
+            <i data-lucide="sliders" style="display:inline; vertical-align:middle; color:var(--primary-indigo);"></i>
+            What-If Clinical Lab
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Simulate how clinical, hormonal, and metabolic parameter adjustments shift the AI-predicted likelihood using the verified 41-feature Random Forest model.
+        </p>
+    </div>
+    <span class="hero-pill" style="margin-bottom:0;">
+        <i data-lucide="database" style="width:13px; height:13px;"></i> Connected: tabular_model.pkl (88.1% Acc / 0.952 AUC)
+    </span>
+</div>
+
+<div class="grid-2">
+    <!-- Controls Column -->
+    <div class="card">
+        <h3 class="card-title" style="margin-bottom: 1.25rem;">
+            <i data-lucide="tune"></i> Clinical & Endocrine Parameters
+        </h3>
+
+        <form id="whatif-form">
+            <!-- Row 1: Age & Cycle -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-slate);">Age (years):</label>
+                    <input type="number" name="Age (yrs)" value="{{ sim.active_parameters.age }}" min="15" max="50" step="1"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-slate);">Menstrual Cycle Pattern:</label>
+                    <select name="Cycle(R/I)" style="width: 100%; padding: 0.55rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                        <option value="2" {% if sim.active_parameters.cycle_type == 'Regular' %}selected{% endif %}>Regular (Normal frequency)</option>
+                        <option value="4" {% if sim.active_parameters.cycle_type == 'Irregular' %}selected{% endif %}>Irregular (Oligomenorrhea / Amenorrhea)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 2: Weight & Height (BMI derived) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-slate);">Weight (kg):</label>
+                    <input type="number" name="Weight (Kg)" value="{{ sim.active_parameters.weight }}" min="35" max="150" step="0.5"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-slate);">Height (cm):</label>
+                    <input type="number" name="Height(Cm)" value="{{ sim.active_parameters.height }}" min="120" max="210" step="1"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                </div>
+            </div>
+
+            <!-- Row 3: AMH & Follicles -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-slate);">AMH Level (ng/mL):</label>
+                    <input type="number" name="AMH(ng/mL)" value="{{ sim.active_parameters.amh }}" min="0.1" max="25" step="0.1"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">Normal: 1.0–3.5 | PCOS often > 4.5</span>
+                </div>
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-slate);">Cycle Length (days):</label>
+                    <input type="number" name="Cycle length(days)" value="{{ sim.active_parameters.cycle_length }}" min="20" max="120" step="1"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">Typical: 28 days | Oligomenorrhea: > 35</span>
+                </div>
+            </div>
+
+            <!-- Row 4: Follicle Counts -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-slate);">Follicles Count (Left Ovary):</label>
+                    <input type="number" name="Follicle No. (L)" value="{{ sim.active_parameters.follicles_left }}" min="1" max="30" step="1"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                </div>
+                <div>
+                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-slate);">Follicles Count (Right Ovary):</label>
+                    <input type="number" name="Follicle No. (R)" value="{{ sim.active_parameters.follicles_right }}" min="1" max="30" step="1"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); font-size: 0.9rem;">
+                </div>
+            </div>
+
+            <!-- Row 5: Symptoms Toggles -->
+            <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+                <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-navy); display:block; margin-bottom:0.75rem;">Associated Clinical Features:</label>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                        <input type="checkbox" name="Weight gain(Y/N)" value="1" {% if sim.active_parameters.weight_gain %}checked{% endif %}>
+                        Recent Weight Gain
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                        <input type="checkbox" name="hair growth(Y/N)" value="1" {% if sim.active_parameters.hair_growth %}checked{% endif %}>
+                        Hirsutism (Excess Hair)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                        <input type="checkbox" name="Skin darkening (Y/N)" value="1" {% if sim.active_parameters.skin_darkening %}checked{% endif %}>
+                        Acanthosis Nigricans
+                    </label>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Output Simulation Column -->
+    <div class="card card-purple-glow">
+        <div class="card-header">
+            <div>
+                <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--primary-indigo);">Live Simulation Output</span>
+                <h3 class="card-title" style="margin-top: 2px;">
+                    Simulated Class: <span id="sim-class-name" style="color:{% if sim.score_pct >= 50 %}#DC2626{% else %}#059669{% endif %};">{{ sim.predicted_class }}</span>
+                </h3>
+            </div>
+            <div id="sim-tier-badge" class="badge-risk {{ sim.risk_tier.badge_class }}">
+                Tier {{ sim.risk_tier.tier }}: {{ sim.risk_tier.category }}
+            </div>
+        </div>
+
+        <!-- Meter -->
+        <div class="risk-meter-container" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 0.88rem; font-weight: 700;">Simulated PCOS Likelihood:</span>
+                <span id="sim-score-pct" style="font-size: 2.2rem; font-weight: 800; color: {{ sim.risk_tier.color }};">
+                    {{ sim.score_pct }}%
+                </span>
+            </div>
+
+            <div class="risk-progress-bar">
+                <div id="sim-progress-fill" class="risk-progress-fill" style="width: {{ sim.score_pct }}%; background-color: {{ sim.risk_tier.color }};"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span id="sim-delta" style="font-size: 0.82rem; font-weight: 700; color:{% if sim.delta_pct > 0 %}#DC2626{% else %}#059669{% endif %};">
+                    Baseline Shift: {% if sim.delta_pct >= 0 %}+{% endif %}{{ sim.delta_pct }}%
+                </span>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Calculated BMI: <strong id="calc-bmi-display">{{ sim.active_parameters.bmi }}</strong> kg/m²</span>
+            </div>
+        </div>
+
+        <!-- Educational Insight -->
+        <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+            <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--text-navy); margin-bottom: 0.4rem;">
+                <i data-lucide="info" style="width:15px; height:15px; display:inline; vertical-align:middle;"></i> How Features Shift Model Likelihood:
+            </h4>
+            <p style="font-size: 0.85rem; color: var(--text-slate); line-height: 1.5;">
+                In the Random Forest model, <strong>AMH</strong>, <strong>Follicle Counts (L & R)</strong>, and <strong>Cycle Regularity</strong> exert the highest Gini feature importance. When AMH rises above 4.5 ng/mL or total follicles exceed 20 across ovaries, the model score rapidly accelerates into higher risk tiers.
+            </p>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('ai_check') }}" class="btn btn-primary" style="flex: 1;">
+                <i data-lucide="scan"></i> Test with Ultrasound Image
+            </a>
+            <a href="{{ url_for('model_lab') }}" class="btn btn-secondary" style="flex: 1;">
+                <i data-lucide="bar-chart-2"></i> Tabular Metrics
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PCOS AI — Explainable Clinical Decision Support{% endblock %}</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="brand-logo">
+                <div class="logo-badge">
+                    <i data-lucide="activity"></i>
+                </div>
+                <div class="brand-text">
+                    PCOS<span>AI</span>
+                    <span class="tagline-sub">Predict • Explain • Recommend</span>
+                </div>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}"><i data-lucide="layout-dashboard"></i> Health Hub</a></li>
+                <li><a href="{{ url_for('ai_check') }}" class="nav-link {% if request.path == '/ai-check' %}active{% endif %}"><i data-lucide="scan"></i> AI Check</a></li>
+                <li><a href="{{ url_for('ai_vision') }}" class="nav-link {% if request.path == '/ai-vision' %}active{% endif %}"><i data-lucide="eye"></i> AI Vision</a></li>
+                <li><a href="{{ url_for('wellness') }}" class="nav-link {% if request.path == '/wellness' %}active{% endif %}"><i data-lucide="heart-pulse"></i> Wellness Guide</a></li>
+                <li><a href="{{ url_for('care_compass') }}" class="nav-link {% if request.path == '/care-compass' %}active{% endif %}"><i data-lucide="compass"></i> Care Compass</a></li>
+                <li><a href="{{ url_for('what_if') }}" class="nav-link {% if request.path == '/what-if' %}active{% endif %}"><i data-lucide="sliders"></i> What-If Lab</a></li>
+                <li><a href="{{ url_for('model_lab') }}" class="nav-link {% if request.path == '/model-lab' %}active{% endif %}"><i data-lucide="flask-conical"></i> Model Lab</a></li>
+                <li><a href="{{ url_for('ai_check') }}" class="nav-link nav-cta"><i data-lucide="upload"></i> Upload Scan</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div style="margin-bottom: 1.5rem;">
+                    {% for category, message in messages %}
+                        <div class="notice-box" style="{% if category == 'error' %}background:#FEE2E2; border-color:#EF4444; color:#991B1B;{% endif %}">
+                            <strong>{{ category.upper() }}:</strong> {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+        <!-- Global Responsible AI Notice -->
+        <div class="notice-box">
+            <strong><i data-lucide="alert-triangle" style="display:inline; width:16px; height:16px; vertical-align:middle;"></i> RESPONSIBLE AI & CLINICAL GOVERNANCE NOTICE:</strong><br>
+            {{ disclaimer or "This AI output is intended strictly for academic research, medical machine learning demonstration, and clinical decision support. It is NOT a medical diagnosis and should not replace evaluation by a qualified healthcare professional." }}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div style="max-width: 1280px; margin: 0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+            <div>
+                <strong>PCOS AI Decision Support</strong> — Academic Engineering Project Demonstration
+            </div>
+            <div>
+                Verified Transfer Learning Backbones: EfficientNetB0 & DenseNet121 | Python 3.13 / TensorFlow 2.21
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

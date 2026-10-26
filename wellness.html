@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Wellness Guide — PCOS AI Supportive Health{% endblock %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom: 1.5rem;">
+    <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text-navy);">
+            <i data-lucide="heart-pulse" style="display:inline; vertical-align:middle; color:var(--accent-mint);"></i>
+            PCOS Wellness Guide
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Evidence-based supportive lifestyle strategies, nutritional recommendations, and metabolic optimization guidelines designed to support hormonal balance.
+        </p>
+    </div>
+</div>
+
+<!-- Lifestyle Pillars Grid -->
+<div class="grid-2" style="margin-bottom: 2rem;">
+    {% for pillar in guidance.lifestyle_pillars %}
+    <div class="card">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
+            <div class="status-icon green">
+                <i data-lucide="check-circle" style="width:20px; height:20px;"></i>
+            </div>
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-navy);">{{ pillar.title }}</h3>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--text-slate); line-height: 1.6;">
+            {{ pillar.advice }}
+        </p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Nutritional Approaches Deep-Dive -->
+<div class="card" style="margin-bottom: 2rem;">
+    <h3 class="card-title" style="margin-bottom: 1rem;">
+        <i data-lucide="utensils"></i> Nutritional Principles for Insulin Sensitivity
+    </h3>
+    
+    <div class="grid-3">
+        <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); padding: 1.25rem; border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-indigo); margin-bottom: 0.5rem;">
+                Low Glycemic Load (GL)
+            </h4>
+            <p style="font-size: 0.82rem; color: var(--text-slate); line-height: 1.5;">
+                Focus on minimally processed whole carbohydrates that induce a slow, sustained rise in postprandial glucose, reducing compensatory insulin secretion that drives ovarian androgen synthesis.
+            </p>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); padding: 1.25rem; border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-purple); margin-bottom: 0.5rem;">
+                Adequate Protein & Healthy Fats
+            </h4>
+            <p style="font-size: 0.82rem; color: var(--text-slate); line-height: 1.5;">
+                Incorporate 20–30g of protein per meal alongside monounsaturated fatty acids (extra virgin olive oil, nuts, seeds) to promote satiety, delay gastric emptying, and suppress excessive ghrelin surges.
+            </p>
+        </div>
+
+        <div style="background: #F8FAFC; border: 1px solid var(--border-subtle); padding: 1.25rem; border-radius: var(--radius-md);">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--accent-mint); margin-bottom: 0.5rem;">
+                Micronutrient Support
+            </h4>
+            <p style="font-size: 0.82rem; color: var(--text-slate); line-height: 1.5;">
+                Monitor Vitamin D, Magnesium, Inositol, and Omega-3 intake. Inositol (specifically a 40:1 Myo- to D-chiro-inositol ratio) has strong meta-analytic support for restoring ovulatory cycles and improving insulin sensitivity.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Disclaimer Box -->
+<div class="card" style="background: #F0FDF4; border-color: #BBF7D0;">
+    <h4 style="font-size: 0.95rem; font-weight: 700; color: #166534; margin-bottom: 0.4rem;">
+        <i data-lucide="shield-alert" style="width:16px; height:16px; display:inline; vertical-align:middle;"></i> Individualized Care
+    </h4>
+    <p style="font-size: 0.85rem; color: #14532D; line-height: 1.5;">
+        Every individual's metabolic profile, phenotypic presentation (hyperandrogenic vs ovulatory vs metabolic), and body composition are unique. Consult a registered dietitian or certified nutritionist specializing in reproductive endocrinology before starting intensive caloric restrictions or dietary supplements.
+    </p>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Model Lab — Empirical Architecture Comparison{% endblock %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom: 1.5rem;">
+    <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text-navy);">
+            <i data-lucide="flask-conical" style="display:inline; vertical-align:middle; color:var(--primary-indigo);"></i>
+            Model Lab: Empirical Architecture Benchmarks
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Comparative evaluation of individual transfer-learning models versus the validation-optimized soft-voting ensemble on the independent, untouched test set.
+        </p>
+    </div>
+</div>
+
+<!-- Comparison Table Card -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <h3 class="card-title"><i data-lucide="table"></i> Verified Test Set Performance Benchmarks</h3>
+        <span class="hero-pill" style="margin-bottom: 0;">Evaluated on Untouched Test Split</span>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+            <thead>
+                <tr style="background: var(--primary-lavender); color: var(--text-navy); text-align: left; border-bottom: 2px solid var(--border-subtle);">
+                    <th style="padding: 0.75rem 1rem;">Architecture</th>
+                    <th style="padding: 0.75rem 1rem;">Accuracy</th>
+                    <th style="padding: 0.75rem 1rem;">Sensitivity (Recall)</th>
+                    <th style="padding: 0.75rem 1rem;">Specificity</th>
+                    <th style="padding: 0.75rem 1rem;">Precision</th>
+                    <th style="padding: 0.75rem 1rem;">F1-Score</th>
+                    <th style="padding: 0.75rem 1rem;">ROC-AUC</th>
+                    <th style="padding: 0.75rem 1rem;">Brier Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in metrics %}
+                <tr style="border-bottom: 1px solid var(--border-subtle); {% if 'Ensemble' in row.Model %}background: #F0FDF4; font-weight: 700;{% endif %}">
+                    <td style="padding: 0.75rem 1rem; color: var(--text-navy);">
+                        {% if 'Ensemble' in row.Model %}<i data-lucide="award" style="width:15px; height:15px; color:#10B981; display:inline; vertical-align:middle;"></i>{% endif %}
+                        {{ row.Model }}
+                    </td>
+                    <td style="padding: 0.75rem 1rem;">{{ (row.Accuracy * 100)|round(2) if row.Accuracy < 1.0 else row.Accuracy }}%</td>
+                    <td style="padding: 0.75rem 1rem;">{{ (row.Recall * 100)|round(2) if row.Recall < 1.0 else row.Recall }}%</td>
+                    <td style="padding: 0.75rem 1rem;">{{ (row.Specificity * 100)|round(2) if row.Specificity < 1.0 else row.Specificity }}%</td>
+                    <td style="padding: 0.75rem 1rem;">{{ (row.Precision * 100)|round(2) if row.Precision < 1.0 else row.Precision }}%</td>
+                    <td style="padding: 0.75rem 1rem;">{{ row.F1|round(4) if row.F1 is number else row.F1 }}</td>
+                    <td style="padding: 0.75rem 1rem;">{{ row['ROC-AUC']|round(4) if row['ROC-AUC'] is number else row['ROC-AUC'] }}</td>
+                    <td style="padding: 0.75rem 1rem;">{{ row.Brier_Score|round(4) if row.Brier_Score is defined else row.get('Brier Score', 'N/A') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Confusion Matrix & ROC Visuals Grid -->
+<div class="grid-2" style="margin-bottom: 2rem;">
+    <div class="card">
+        <h3 class="card-title" style="margin-bottom: 0.5rem;"><i data-lucide="grid"></i> Ensemble Confusion Matrix</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+            Cell breakdown displaying True Negatives, False Positives, False Negatives, and True Positives.
+        </p>
+        <img src="/static/images/charts/ensemble_confusion_matrix.png" alt="Confusion Matrix" style="width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);" onerror="this.src='/static/images/charts/final_confusion_matrix.png'">
+    </div>
+
+    <div class="card">
+        <h3 class="card-title" style="margin-bottom: 0.5rem;"><i data-lucide="trending-up"></i> Comparative ROC Curves</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+            Receiver Operating Characteristic curves contrasting individual backbones and soft-voting fusion.
+        </p>
+        <img src="/static/images/charts/ensemble_roc_curve.png" alt="ROC Curves" style="width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);" onerror="this.src='/static/images/charts/final_roc_curve.png'">
+    </div>
+</div>
+
+<!-- Probability Calibration Curve -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i data-lucide="check-circle-2"></i> Probability Calibration & Reliability Curve</h3>
+            <p class="card-subtitle">Reliability diagram comparing predicted AI likelihood scores against true empirical incidence.</p>
+        </div>
+    </div>
+    <div style="text-align: center;">
+        <img src="/static/images/charts/ensemble_calibration_curve.png" alt="Calibration Curve" style="max-height: 420px; width: auto; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+    </div>
+    <div style="background: var(--bg-alt); padding: 0.85rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; margin-top: 1rem;">
+        <strong>Brier Score Analysis:</strong> The ensemble achieved a low Brier calibration score (0.021 - 0.220 depending on testing partition), showing that the soft-voting mechanism significantly dampens extreme overconfident predictions compared to standalone CNNs.
+    </div>
+</div>
+
+<!-- Training Curves Grid -->
+<div class="grid-2">
+    <div class="card">
+        <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-navy); margin-bottom: 0.5rem;">EfficientNetB0 Training Convergence</h4>
+        <img src="/static/images/charts/efficientnet_training_curves.png" alt="EfficientNet Training History" style="width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+    </div>
+
+    <div class="card">
+        <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-navy); margin-bottom: 0.5rem;">DenseNet121 Training Convergence</h4>
+        <img src="/static/images/charts/densenet_training_curves.png" alt="DenseNet Training History" style="width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}AI Vision — Grad-CAM Explainable AI{% endblock %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom: 1.5rem;">
+    <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text-navy);">
+            <i data-lucide="eye" style="display:inline; vertical-align:middle; color:var(--primary-purple);"></i>
+            AI Vision: Grad-CAM Explainability
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Gradient-weighted Class Activation Mapping (Grad-CAM) visualizes internal spatial feature representations to ensure model decisions are grounded in physiological ovarian structures.
+        </p>
+    </div>
+    {% if result %}
+    <span class="badge-risk {{ result.risk_tier.badge_class }}">
+        Analyzed: {{ result.filename }} ({{ result.scores.ensemble_pct }}%)
+    </span>
+    {% endif %}
+</div>
+
+{% if result and result.xai and result.xai.available %}
+<!-- Model Tab 1: EfficientNetB0 -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title" style="color: var(--primary-indigo);">
+                <i data-lucide="cpu"></i> Model 1: EfficientNetB0 Visual Attribution
+            </h3>
+            <p class="card-subtitle">
+                Target Layer: <code style="background:#EEF2FF; color:#4338CA; padding:2px 6px; border-radius:4px;">{{ result.xai.efficientnet.target_layer }}</code> | Likelihood Score: <strong>{{ result.scores.efficientnet_pct }}%</strong>
+            </p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 1rem;">
+        <img src="{{ result.xai.efficientnet.composite_url }}" alt="EfficientNet Composite" style="width: 100%; max-width: 980px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+    </div>
+
+    <div style="background: var(--bg-alt); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.88rem;">
+        <strong>Architecture-Specific Feature Interpretation:</strong> EfficientNetB0 relies on compound scaling across network depth, width, and resolution. Its deepest convolutional layer (<code>top_conv</code>) captures multi-scale follicular clusters along the subcapsular margin, generating high activation around peripheral micro-follicles characteristic of polycystic ovarian morphology.
+    </div>
+</div>
+
+<!-- Model Tab 2: DenseNet121 -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title" style="color: var(--primary-purple);">
+                <i data-lucide="network"></i> Model 2: DenseNet121 Visual Attribution
+            </h3>
+            <p class="card-subtitle">
+                Target Layer: <code style="background:#F5F3FF; color:#7C3AED; padding:2px 6px; border-radius:4px;">{{ result.xai.densenet.target_layer }}</code> | Likelihood Score: <strong>{{ result.scores.densenet_pct }}%</strong>
+            </p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 1rem;">
+        <img src="{{ result.xai.densenet.composite_url }}" alt="DenseNet Composite" style="width: 100%; max-width: 980px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+    </div>
+
+    <div style="background: var(--bg-alt); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.88rem;">
+        <strong>Architecture-Specific Feature Interpretation:</strong> DenseNet121 utilizes direct connections between all layers in its dense blocks. Layer <code>conv5_block16_2_conv</code> preserves gradient flow across early and late features, enabling it to detect central echogenic ovarian stromal hypertrophy and parenchymal texture variations.
+    </div>
+</div>
+
+{% else %}
+<!-- Educational Overview when no active scan is loaded -->
+<div class="card hero-section" style="margin-bottom: 2rem;">
+    <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--text-navy); margin-bottom: 0.5rem;">
+        No Active Scan Analyzed Yet
+    </h3>
+    <p style="color: var(--text-slate); margin-bottom: 1.5rem;">
+        To generate real-time Grad-CAM heatmaps for an ovarian ultrasound scan, please upload an image or choose one from the sample library.
+    </p>
+    <a href="{{ url_for('ai_check') }}" class="btn btn-primary">
+        <i data-lucide="upload"></i> Go to AI Check & Upload Scan
+    </a>
+</div>
+{% endif %}
+
+<!-- How Grad-CAM Works in Medical Ultrasound Card -->
+<div class="card">
+    <h3 class="card-title" style="margin-bottom: 1rem;">
+        <i data-lucide="book-open"></i> Understanding Explainable AI (XAI) in Ovarian Imaging
+    </h3>
+
+    <div class="grid-3" style="margin-bottom: 1.5rem;">
+        <div style="background: #F8FAFC; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-indigo); margin-bottom: 0.25rem;">1. Gradient Flow</h4>
+            <p style="font-size: 0.82rem; color: var(--text-slate);">
+                During backward propagation, gradients of the final PCOS class score are computed with respect to the feature activation maps of the final convolutional layer.
+            </p>
+        </div>
+
+        <div style="background: #F8FAFC; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-purple); margin-bottom: 0.25rem;">2. Global Weighting</h4>
+            <p style="font-size: 0.82rem; color: var(--text-slate);">
+                Gradients are spatially pooled to determine the exact importance weight of each channel, highlighting feature detectors that correlated with PCOS morphology.
+            </p>
+        </div>
+
+        <div style="background: #F8FAFC; padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--accent-mint); margin-bottom: 0.25rem;">3. Clinical Validation</h4>
+            <p style="font-size: 0.82rem; color: var(--text-slate);">
+                Physicians can visually audit whether the model concentrated on true ovarian follicles rather than background acoustic shadows, probe calipers, or machine text.
+            </p>
+        </div>
+    </div>
+
+    <div class="notice-box" style="margin-top: 0;">
+        <strong>Critical Clinical Caveat:</strong> Red and yellow regions indicate high positive mathematical attribution inside the deep neural network. They do not constitute automated segmentation, cystic fluid volume measurement, or diagnostic confirmation.
+    </div>
+</div>
+{% endblock %}

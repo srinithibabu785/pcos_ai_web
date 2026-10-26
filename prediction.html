@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}AI Check — PCOS AI Decision Support{% endblock %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom: 1.5rem;">
+    <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text-navy);">
+            <i data-lucide="scan" style="display:inline; vertical-align:middle; color:var(--primary-indigo);"></i>
+            AI Ultrasound Check
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Upload a transvaginal ultrasound image for automated morphological assessment by the verified transfer learning ensemble.
+        </p>
+    </div>
+</div>
+
+{% if not result %}
+<!-- Upload View -->
+<div class="grid-2">
+    <!-- Dropzone Card -->
+    <div class="card card-purple-glow">
+        <h3 class="card-title" style="margin-bottom: 1rem;"><i data-lucide="upload"></i> Upload Scan</h3>
+        
+        <form id="upload-form" action="{{ url_for('ai_check') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" id="ultrasound_image" name="ultrasound_image" accept=".jpg,.jpeg,.png" style="display: none;">
+            <input type="hidden" name="sample_path" id="sample_path_input" value="">
+
+            <div class="upload-dropzone" id="dropzone">
+                <i data-lucide="image-plus" class="upload-icon"></i>
+                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-navy);">Drag & Drop Ultrasound Scan Here</h4>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Supports JPG, JPEG, PNG (Max 10 MB)</p>
+                <button type="button" class="btn btn-secondary" style="margin-top: 1rem;">
+                    Browse File on Computer
+                </button>
+            </div>
+
+            <!-- Image Preview Container -->
+            <div id="upload-preview" style="display: none; margin-top: 1.5rem; text-align: center;">
+                <p style="font-weight: 600; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Selected Scan Preview:</p>
+                <img id="preview-img" src="" alt="Preview" style="max-height: 220px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%;" disabled>
+                    <i data-lucide="play"></i> Analyze Scan with Ensemble
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Sample Selection Card -->
+    <div class="card">
+        <h3 class="card-title" style="margin-bottom: 0.5rem;"><i data-lucide="library"></i> Or Choose from Benchmark Samples</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.25rem;">
+            Click any verified test scan below to populate and run the dual transfer learning pipeline instantly.
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            {% for s in samples %}
+            <div class="sample-item sample-card-btn" data-sample-path="{{ s.path }}">
+                <img src="{{ s.path }}" alt="{{ s.name }}">
+                <div style="padding: 0.5rem;">
+                    <span style="font-size: 0.8rem; font-weight: 600;">{{ s.name }}</span>
+                    <span style="font-size: 0.72rem; color:{% if s.type == 'PCOS' %}#DC2626{% else %}#059669{% endif %}; font-weight:700;">
+                        Ground Truth: {{ s.type }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Prediction Results View -->
+<div class="grid-2" style="margin-bottom: 2rem;">
+    <!-- Left: Original Scan & Basic Info -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i data-lucide="image"></i> Ultrasound Scan Analyzed</h3>
+            <span style="font-size:0.75rem; color:var(--text-muted); font-family:monospace;">ID: {{ result.request_id }}</span>
+        </div>
+        
+        <div style="text-align: center; margin-bottom: 1rem;">
+            {% if result.xai and result.xai.available and result.xai.efficientnet %}
+                <img src="{{ result.xai.efficientnet.original_url }}" alt="Scan" style="max-height: 280px; width: auto; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm);">
+            {% else %}
+                <div style="height: 220px; background: #E2E8F0; display:flex; align-items:center; justify-content:center; border-radius: var(--radius-md);">
+                    Scan Processed
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="background: var(--bg-alt); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: var(--text-muted);">Source File:</span>
+                <span style="font-weight: 600;">{{ result.filename }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span style="color: var(--text-muted);">Resolution:</span>
+                <span style="font-weight: 600;">{{ result.dimensions }} (Standardized 224×224)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Inference Latency:</span>
+                <span style="font-weight: 600;">{{ result.elapsed_seconds }}s (CPU Execution)</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('ai_vision', id=result.request_id) }}" class="btn btn-outline-purple" style="flex: 1; font-size: 0.85rem;">
+                <i data-lucide="eye"></i> Full Grad-CAM
+            </a>
+            <a href="{{ url_for('download_report', request_id=result.request_id) }}" class="btn btn-secondary" style="flex: 1; font-size: 0.85rem;">
+                <i data-lucide="download"></i> PDF Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Right: Prediction & Risk Stratification -->
+    <div class="card card-purple-glow">
+        <div class="card-header">
+            <div>
+                <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--primary-indigo); letter-spacing: 0.05em;">AI Prediction Output</span>
+                <h3 class="card-title" style="font-size: 1.5rem; margin-top: 2px;">
+                    Predicted: <span style="color:{% if result.predicted_class_id == 1 %}#DC2626{% else %}#059669{% endif %};">{{ result.predicted_class }}</span>
+                </h3>
+            </div>
+            <div class="badge-risk {{ result.risk_tier.badge_class }}">
+                Tier {{ result.risk_tier.tier }}: {{ result.risk_tier.category }}
+            </div>
+        </div>
+
+        <!-- Risk Progress Bar -->
+        <div class="risk-meter-container" style="margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-slate);">
+                    Ensemble PCOS Likelihood Score:
+                </span>
+                <span style="font-size: 1.8rem; font-weight: 800; color: {{ result.risk_tier.color }};">
+                    {{ result.scores.ensemble_pct }}%
+                </span>
+            </div>
+
+            <div class="risk-progress-bar">
+                <div class="risk-progress-fill" style="width: {{ result.scores.ensemble_pct }}%; background-color: {{ result.risk_tier.color }};"></div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-weight: 600;">
+                <span>0% Very Low</span>
+                <span>20% Low</span>
+                <span>40% Moderate</span>
+                <span>60% High</span>
+                <span>80% Very High</span>
+                <span>100%</span>
+            </div>
+        </div>
+
+        <!-- Clinical Guidance Note -->
+        <div style="background: #F8FAFC; border-left: 4px solid {{ result.risk_tier.color }}; padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+            <p style="font-size: 0.88rem; color: var(--text-slate); line-height: 1.5;">
+                <strong>Decision-Support Guidance:</strong> {{ result.risk_tier.clinical_guidance }}
+            </p>
+        </div>
+
+        <!-- Backbone Score Breakdown -->
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-navy); margin-bottom: 0.75rem;">
+            <i data-lucide="layers" style="width:16px; height:16px; display:inline; vertical-align:middle;"></i> Transfer Learning Backbone Contributions:
+        </h4>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="background: white; border: 1px solid var(--border-subtle); padding: 0.85rem; border-radius: var(--radius-md);">
+                <div style="font-size: 0.78rem; color: var(--text-muted);">EfficientNetB0 (Compound)</div>
+                <div style="font-size: 1.3rem; font-weight: 800; color: var(--text-navy);">{{ result.scores.efficientnet_pct }}%</div>
+                <div style="font-size: 0.72rem; color: var(--primary-indigo);">Weight: {{ result.ensemble_config.weight_efficientnet }}</div>
+            </div>
+
+            <div style="background: white; border: 1px solid var(--border-subtle); padding: 0.85rem; border-radius: var(--radius-md);">
+                <div style="font-size: 0.78rem; color: var(--text-muted);">DenseNet121 (Dense Blocks)</div>
+                <div style="font-size: 1.3rem; font-weight: 800; color: var(--text-navy);">{{ result.scores.densenet_pct }}%</div>
+                <div style="font-size: 0.72rem; color: var(--primary-purple);">Weight: {{ result.ensemble_config.weight_densenet }}</div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="{{ url_for('ai_check') }}" class="btn btn-secondary" style="flex: 1;">
+                <i data-lucide="rotate-ccw"></i> Analyze Another Scan
+            </a>
+            <a href="{{ url_for('care_compass') }}" class="btn btn-primary" style="flex: 1;">
+                <i data-lucide="compass"></i> Recommended Panels
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Grad-CAM Explainability Sneak Peek -->
+{% if result.xai and result.xai.available %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title"><i data-lucide="eye"></i> Explainable AI (Grad-CAM Salience Heatmaps)</h3>
+            <p class="card-subtitle">Real-time gradient feature attribution computed for the deepest convolutional layers.</p>
+        </div>
+        <a href="{{ url_for('ai_vision', id=result.request_id) }}" class="btn btn-outline-purple" style="font-size:0.82rem;">
+            Full Resolution View <i data-lucide="external-link" style="width:14px; height:14px;"></i>
+        </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+        <div>
+            <h4 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-navy);">EfficientNetB0 Overlay ('top_conv')</h4>
+            <img src="{{ result.xai.efficientnet.overlay_url }}" alt="EfficientNet Overlay" style="width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        </div>
+        <div>
+            <h4 style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-navy);">DenseNet121 Overlay ('conv5_block16_2_conv')</h4>
+            <img src="{{ result.xai.densenet.overlay_url }}" alt="DenseNet Overlay" style="width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

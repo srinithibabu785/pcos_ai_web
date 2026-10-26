@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}My AI Report — PCOS AI Decision Support{% endblock %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom: 1.5rem;">
+    <div>
+        <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text-navy);">
+            <i data-lucide="file-text" style="display:inline; vertical-align:middle; color:var(--primary-indigo);"></i>
+            Clinical Decision-Support Research Report
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Synthesized academic research report for Study Identifier: <strong>PAS-{{ result.request_id }}</strong>
+        </p>
+    </div>
+    <div>
+        <a href="{{ url_for('download_report', request_id=result.request_id) }}" class="btn btn-primary">
+            <i data-lucide="download"></i> Download Official PDF
+        </a>
+    </div>
+</div>
+
+<!-- Report Document Paper Simulation -->
+<div class="card" style="max-width: 900px; margin: 0 auto 2.5rem; padding: 2.5rem; background: #FFFFFF; border: 1px solid #CBD5E1; box-shadow: var(--shadow-lg);">
+    <!-- Document Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--primary-indigo); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+        <div>
+            <h1 style="font-size: 1.5rem; font-weight: 800; color: #1E1B4B; margin-bottom: 0.2rem;">PCOS AI Decision Support</h1>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">Explainable Ensemble Transfer Learning Research Prototype</p>
+        </div>
+        <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
+            <div>Study ID: <strong>PAS-{{ result.request_id }}</strong></div>
+            <div>Date: <strong>{{ result.timestamp if result.timestamp else 'Generated Today' }}</strong></div>
+        </div>
+    </div>
+
+    <!-- Metadata Section -->
+    <div style="background: var(--bg-alt); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-size: 0.85rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <div><strong>Source Ultrasound Scan:</strong> {{ result.filename }}</div>
+            <div><strong>Image Resolution:</strong> {{ result.dimensions }} (Resized to 224×224)</div>
+            <div><strong>Ensemble Weights:</strong> w1(Eff) = {{ result.ensemble_config.weight_efficientnet }}, w2(Dense) = {{ result.ensemble_config.weight_densenet }}</div>
+            <div><strong>Calibrated Threshold:</strong> {{ result.ensemble_config.threshold }}</div>
+        </div>
+    </div>
+
+    <!-- Predictive Scores Breakdown -->
+    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-navy); margin-bottom: 0.75rem;">
+        1. Model-Predicted PCOS Likelihood Scores
+    </h3>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-bottom: 1.5rem;">
+        <thead>
+            <tr style="background: #EEF2FF; text-align: left; border-bottom: 1px solid #CBD5E1;">
+                <th style="padding: 0.6rem;">Architecture</th>
+                <th style="padding: 0.6rem;">Weight</th>
+                <th style="padding: 0.6rem;">Likelihood Score</th>
+                <th style="padding: 0.6rem;">Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 0.6rem;">EfficientNetB0 (Compound Scaling)</td>
+                <td style="padding: 0.6rem;">{{ result.ensemble_config.weight_efficientnet }}</td>
+                <td style="padding: 0.6rem; font-weight: 700;">{{ result.scores.efficientnet_pct }}%</td>
+                <td style="padding: 0.6rem; color: var(--text-muted);">Subcapsular micro-follicle detection</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 0.6rem;">DenseNet121 (Dense Feature Reuse)</td>
+                <td style="padding: 0.6rem;">{{ result.ensemble_config.weight_densenet }}</td>
+                <td style="padding: 0.6rem; font-weight: 700;">{{ result.scores.densenet_pct }}%</td>
+                <td style="padding: 0.6rem; color: var(--text-muted);">Stromal echogenicity & parenchymal texture</td>
+            </tr>
+            <tr style="background: #E0E7FF; font-weight: 700;">
+                <td style="padding: 0.6rem; color: #3730A3;">Integrated Soft-Voting Ensemble</td>
+                <td style="padding: 0.6rem;">1.00</td>
+                <td style="padding: 0.6rem; color: #3730A3; font-size: 1.05rem;">{{ result.scores.ensemble_pct }}%</td>
+                <td style="padding: 0.6rem; color: #3730A3;">Primary Decision-Support Metric</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Risk Stratification Box -->
+    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-navy); margin-bottom: 0.75rem;">
+        2. Presentation Risk Category
+    </h3>
+
+    <div style="border-left: 4px solid {{ result.risk_tier.color }}; background: #F8FAFC; padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+        <div style="font-size: 1rem; font-weight: 800; color: var(--text-navy); margin-bottom: 0.25rem;">
+            Predicted Classification: <span style="color:{{ result.risk_tier.color }};">{{ result.predicted_class }}</span>
+            (Tier {{ result.risk_tier.tier }}: {{ result.risk_tier.category }}, Score Band: {{ result.risk_tier.band }})
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-slate); line-height: 1.5;">
+            {{ result.risk_tier.clinical_guidance }}
+        </p>
+    </div>
+
+    <!-- Grad-CAM Attribution Section -->
+    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-navy); margin-bottom: 0.75rem;">
+        3. Explainable AI Feature Attribution (Grad-CAM)
+    </h3>
+    <p style="font-size: 0.85rem; color: var(--text-slate); line-height: 1.5; margin-bottom: 1rem;">
+        Convolutional filters in <code>top_conv</code> and <code>conv5_block16_2_conv</code> highlight regions around peripheral follicular rims and internal stromal hypertrophy. These activations demonstrate model focus on ovarian structures rather than machine probe artifacts.
+    </p>
+
+    {% if result.xai and result.xai.available %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="text-align: center;">
+            <div style="font-size: 0.78rem; font-weight: 700; margin-bottom: 0.3rem;">EfficientNetB0 Overlay</div>
+            <img src="{{ result.xai.efficientnet.overlay_url }}" style="max-height: 160px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+        </div>
+        <div style="text-align: center;">
+            <div style="font-size: 0.78rem; font-weight: 700; margin-bottom: 0.3rem;">DenseNet121 Overlay</div>
+            <img src="{{ result.xai.densenet.overlay_url }}" style="max-height: 160px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Clinical Governance Callout -->
+    <div class="notice-box" style="margin-top: 1rem;">
+        <strong>Academic Governance Notice:</strong> This report represents an automated research summary. It is not an official medical diagnosis or laboratory finding. Clinical correlation with biochemical and endocrinological panels is mandatory.
+    </div>
+</div>
+{% endblock %}
