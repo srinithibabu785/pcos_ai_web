@@ -21,7 +21,7 @@ PROJECT_ROOT = WEB_DIR.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from services.model_loader import ModelManager
+from pcos_ai_web.services.model_loader import ModelManager
 from pcos_ai_web.services.prediction_service import process_and_predict, validate_uploaded_image
 from pcos_ai_web.services.whatif_service import simulate_whatif, DEFAULT_PROFILE
 from pcos_ai_web.services.recommendation_service import get_clinical_guidance
